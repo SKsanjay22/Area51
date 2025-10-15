@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
+#define MAX_SIZE 100
+
+int stack[MAX_SIZE];
+int top = -1;
+
+void push(int item) {
+    if (top >= MAX_SIZE - 1) {
+        printf("Stack Overflow\n");
+        exit(1);
+    }
+    stack[++top] = item;
+}
+
+int pop() {
+    if (top < 0) {
+        printf("Stack Underflow\n");
+        exit(1);
+    }
+    return stack[top--];
+}
+
+int evaluatePostfix(char* exp) {
+    int i = 0;
+    while (exp[i] != '\0') {
+        // Skip spaces
+        if (isspace(exp[i])) {
+            i++;
+            continue;
+        }
+
+        // If digit, handle possibly multi-digit numbers
+        if (isdigit(exp[i])) {
+            int num = 0;
+            while (isdigit(exp[i])) {
+                num = num * 10 + (exp[i] - '0');
+                i++;
+            }
+            push(num);
+            continue;  // Skip the rest of the loop to avoid i++
+        }
+
+        // Operator case
+        int operand2 = pop();
+        int operand1 = pop();
+        int result = 0;
+
+        switch (exp[i]) {
+            case '+': result = operand1 + operand2; break;
+            case '-': result = operand1 - operand2; break;
+            case '*': result = operand1 * operand2; break;
+            case '/':
+                if (operand2 == 0) {
+                    printf("Error: Division by zero\n");
+                    exit(1);
+                }
+                result = operand1 / operand2; break;
+            case '^': {
+                result = 1;
+                for (int j = 0; j < operand2; j++)
+                    result *= operand1;
+                break;
+            }
+            default:
+                printf("Error: Invalid operator '%c'\n", exp[i]);
+                exit(1);
+        }
+
+        push(result);
+        i++;
+    }
+
+    return pop();
+}
+
+int main() {
+    char postfix[MAX_SIZE];
+
+    printf("Enter a postfix expression (use spaces between numbers): ");
+    fgets(postfix, MAX_SIZE, stdin);
+
+    // Remove trailing newline (if any)
+    postfix[strcspn(postfix, "\n")] = '\0';
+
+    int result = evaluatePostfix(postfix);
+    printf("Evaluated result: %d\n", result);
+
+    return 0;
+}
